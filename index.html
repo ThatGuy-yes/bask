@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single-Player Basketball Game Against AI</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0; }
+        canvas { border: 2px solid black; }
+    </style>
+</head>
+<body>
+    <script>
+        // Game settings
+        let ballPos, ballVelocity, basketPos, basketWidth = 100, basketHeight = 20, ballRadius = 15;
+        let playerScore = 0, aiScore = 0, gravity = 0.5;
+        let playerShot = false;
+
+        // AI settings
+        let aiPos, aiVelocity, aiSpeed = 3;
+
+        function setup() {
+            createCanvas(800, 600);
+            ballPos = createVector(width / 2, height - 100);
+            ballVelocity = createVector(0, 0);
+            basketPos = createVector(width - 150, height / 4); // Position of the basket
+            aiPos = createVector(width / 4, height / 4); // AI position
+        }
+
+        function draw() {
+            background(255);
+
+            // Update the ball's position
+            updateBall();
+
+            // Draw the basket
+            drawBasket();
+
+            // Draw the ball
+            drawBall();
+
+            // Draw the AI
+            drawAI();
+
+            // Display the scores
+            displayScores();
+
+            // AI logic to block or shoot
+            aiMovement();
+
+            // Check if AI scored
+            if (ballPos.y + ballRadius > height - basketHeight && ballPos.x > basketPos.x && ballPos.x < basketPos.x + basketWidth) {
+                aiScore++;
+                resetBall();
+            }
+
+            // Player logic for shot
+            if (playerShot) {
+                ballVelocity.y += gravity;
+                if (ballPos.y + ballRadius >= height) {
+                    playerShot = false;
+                }
+            }
+        }
+
+        function updateBall() {
+            ballPos.add(ballVelocity);
+
+            // Ball collision with walls
+            if (ballPos.x - ballRadius < 0 || ballPos.x + ballRadius > width) {
+                ballVelocity.x = -ballVelocity.x; // Bounce off the walls
+            }
+
+            // Ball collision with the ground
+            if (ballPos.y + ballRadius > height) {
+                ballVelocity.y = 0; // Stop the ball from falling
+            }
+
+            // Check if the ball is inside the basket
+            if (ballPos.y - ballRadius < basketPos.y + basketHeight &&
+                ballPos.x > basketPos.x && ballPos.x < basketPos.x + basketWidth) {
+                playerScore++;
+                resetBall();
+            }
+        }
+
+        function drawBall() {
+            fill(255, 0, 0);
+            ellipse(ballPos.x, ballPos.y, ballRadius * 2);
+        }
+
+        function drawBasket() {
+            fill(255, 165, 0);
+            rect(basketPos.x, basketPos.y, basketWidth, basketHeight);
+        }
+
+        function drawAI() {
+            fill(0, 0, 255);
+            rect(aiPos.x, aiPos.y, 50, 50); // AI player (simple rectangle)
+        }
+
+        function displayScores() {
+            fill(0);
+            textSize(30);
+            text('Player: ' + playerScore, 20, 40);
+            text('AI: ' + aiScore, width - 120, 40);
+        }
+
+        function resetBall() {
+            ballPos = createVector(width / 2, height - 100);
+            ballVelocity = createVector(0, 0);
+        }
+
+        function mousePressed() {
+            if (!playerShot) {
+                let dx = mouseX - ballPos.x;
+                let dy = mouseY - ballPos.y;
+                let angle = atan2(dy, dx);
+                let speed = min(dist(mouseX, mouseY, ballPos.x, ballPos.y) / 10, 20);
+                ballVelocity.x = cos(angle) * speed;
+                ballVelocity.y = sin(angle) * speed;
+                playerShot = true;
+            }
+        }
+
+        function aiMovement() {
+            if (ballPos.x > aiPos.x + 25 && ballPos.x < aiPos.x + 75) {
+                aiPos.x += aiSpeed;
+            } else if (ballPos.x < aiPos.x + 25) {
+                aiPos.x -= aiSpeed;
+            }
+
+            // Simulate the AI shooting
+            if (aiPos.x + 25 > basketPos.x && aiPos.x + 25 < basketPos.x + basketWidth) {
+                if (random() < 0.02) { // Random chance for AI to take a shot
+                    aiScore++;
+                    resetBall();
+                }
+            }
+        }
+
+    </script>
+</body>
+</html>
